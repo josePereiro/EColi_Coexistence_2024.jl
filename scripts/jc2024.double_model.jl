@@ -101,6 +101,8 @@ function double_model(net0, id1, id2; med = "Medium")
 end
 
 ## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
+#TODO: Check KOs independently before double model
+## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
 # ko
 let
     global net0 = pull_net("iJO1366")
