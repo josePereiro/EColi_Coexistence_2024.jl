@@ -7,5 +7,5 @@
 # Dev install
 
 ```bash
-julia -e 'import Pkg; Pkg.develop(url="https://github.com/josePereiro/EColi_Coexistence_2024.jl");Pkg.develop("EColi_Coexistence_2024");Pkg.instantiate()'
+julia -e 'import Pkg; Pkg.Registry.add(url = "https://github.com/MetabolicXploration/MetX_Registry_jl"); Pkg.Registry.add(url = "https://github.com/FF-UH/CSC_Registry.jl"); Pkg.Registry.add(url = "https://github.com/JuliaRegistries/General.gitjl"); Pkg.develop(url="https://github.com/josePereiro/EColi_Coexistence_2024.jl");Pkg.develop("EColi_Coexistence_2024"); Pkg.instantiate()'
 ```
