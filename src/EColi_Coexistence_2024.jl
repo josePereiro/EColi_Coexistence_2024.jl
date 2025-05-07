@@ -1,5 +1,13 @@
 module EColi_Coexistence_2024
 
-# Write your package code here.
+    export PaperSON_dir
+    function PaperSON_dir()
+        path = joinpath(
+            pkgdir(EColi_Coexistence_2024), 
+            "data", "PaperSON"
+        )
+        !isdir(path) && error("PaperSON folder missing... see https://github.com/MetabolicXploration/PaperSON")
+        return path
+    end
 
 end

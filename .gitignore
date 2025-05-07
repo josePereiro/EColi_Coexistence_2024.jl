@@ -5,6 +5,7 @@
 /data
 /notebooks
 log.txt
+*.jls
 *log.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/julia,macos,linux
