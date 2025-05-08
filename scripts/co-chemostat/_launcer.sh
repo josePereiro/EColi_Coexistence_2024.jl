@@ -1,20 +1,11 @@
 #! /bin/bash
 
-# DEV
-# args=(
-#     --project
-#     "/Users/Pereiro/.julia/dev/EColi_Coexistence_2024/scripts/co-chemostat/_dev.jl"
-#     A=1e-4
-#     # B=123
-#     c=3
-# )
-# julia "${args[@]}"
-
-
 # RUN SIM
 args=(
     --project
     "/Users/Pereiro/.julia/dev/EColi_Coexistence_2024/scripts/co-chemostat/co-chemostat-dfba-2strain-PAM_model.jl"
+    prepare_opm="1.3.prepare.iML1515.2strains.opm.jl"
+    objfun_id="ΔMet.egoist.max.yield"
     glc_Km=1.5                  # [mM] 
     glc_Vmax=8.9                # [mmol/g/h] Match PAM u_max
     dt_min=5e-3                 # [h]
@@ -26,7 +17,7 @@ args=(
     ΔIle_X_t0=0.3
     ΔMet_X_t0=0.3
     dt_t0=1e-1                  # [h]
-    D_t0=0.21                    # [1/h]
+    D_t0=0.1                   # [1/h]
     niters=800
 )
 julia "${args[@]}"

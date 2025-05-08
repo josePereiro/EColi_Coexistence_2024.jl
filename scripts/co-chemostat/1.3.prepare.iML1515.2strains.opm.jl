@@ -13,19 +13,43 @@ include("0.utils.jl")
 
 # -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: PAM Model
-u_ider = "EX_glc__D_e_b"
-u_max = 8.9
-net0 = pull_net(
-    "PAMModel-alterProteomeRegulationPatterns2021", 
-    Dict(
-        "u_ider" => u_ider,
-        "u_max" => u_max,
-    )
-)
+net0 = pull_net("iML1515")
 # bounds!(net0, "METabcpp_b", 0.0, 1000.0)
 # bounds!(net0, "METabcpp_f", 0.0, 1000.0)
 
-net1 = double_model(net0, "ΔMet", "ΔIle", "Medium")
+u_max = 8.9 # nutrient max intake rate
+
+# Extract
+S0, b0, lb0, ub0, mets0, rxns0 = net0.S, net0.b, net0.lb, net0.ub, net0.mets, net0.rxns
+
+# Split
+rxns1 = [
+    [string(rxn, "_f") for rxn in rxns0]; 
+    [string(rxn, "_b") for rxn in rxns0]; 
+]
+mets1 = mets0
+S1 = [
+    S0  -S0
+]
+M, N = size(S1)
+b1 = b0
+c1 = zeros(N)
+lb1 = zeros(N)
+ub1 = [ub0; abs.(lb0)]
+
+# MARK: MetNet
+net1 = MetNet(;S=S1, b=b1, lb=lb1, ub=ub1, c=c1, rxns=rxns1, mets=mets1)
+
+extras!(net1, "BIOM", "BIOMASS_Ec_iML1515_WT_75p37M_f")
+extras!(net1, "EX_GLC", "EX_glc__D_e_b")
+extras!(net1, "EX_NH4", "EX_nh4_e_b")
+extras!(net1, "EX_GLU", "EX_glu__L_e_b")
+extras!(net1, "EX_O2", "EX_o2_e_b")
+extras!(net1, "EX_CO2", "EX_co2_e_b")
+extras!(net1, "ATPM", "ATPM")
+
+net1 = double_model(net1, "ΔMet", "ΔIle", "Medium")
+
 
 # HSST_f
 # (-1.0) hom__L_c + (-1.0) succoa_c ==> (1.0) coa_c + (1.0) suchms_c
@@ -48,7 +72,7 @@ for ex0 in exchs0
 end
 
 # But, close carbon sources
-jsonpath = joinpath(@__DIR__, "data/carbon_sources.json")
+jsonpath = joinpath(@__DIR__,  "data/2.0.carbon-equiv/carbon_sources.json")
 carbon_sources = JSON.parsefile(jsonpath)
 for ex0 in keys(carbon_sources)
     ex1 = "$(ex0)_b" # backward are the imports
@@ -67,9 +91,9 @@ bounds!(net1, "ΔIle:BIOMASS_Ec_iML1515_WT_75p37M_b", 0.0, 0.0)
 # X:EX_glc__D_e_b
 # (-1.0) Medium:glc__D_e ==> (1.0) X:glc__D_e
 bounds!(net1, "ΔMet:EX_glc__D_e_f", 0.0, 0.0)
-bounds!(net1, "ΔMet:EX_glc__D_e_b", 0.0, 1000.0)
+bounds!(net1, "ΔMet:EX_glc__D_e_b", 0.0, u_max)
 bounds!(net1, "ΔIle:EX_glc__D_e_f", 0.0, 0.0)
-bounds!(net1, "ΔIle:EX_glc__D_e_b", 0.0, 1000.0)
+bounds!(net1, "ΔIle:EX_glc__D_e_b", 0.0, u_max)
 
 # Medium:EX_glc__D_e_f
 # (-1.0) Medium:glc__D_e ==>
@@ -129,3 +153,6 @@ set_linear_obj!(opm,
 
 println("-"^30)
 _opm_summary_PamModel_alter(opm)
+
+
+nothing

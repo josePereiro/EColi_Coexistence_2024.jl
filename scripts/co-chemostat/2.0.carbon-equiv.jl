@@ -87,7 +87,11 @@ end
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 # Save carbon_sources into a json
-jsonpath = joinpath(@__DIR__, "carbon_sources.json")
+datdir = joinpath(@__DIR__, "base",
+    replace(basename(@__FILE__), r".jl$" => "")
+)
+mkpath(datdir)
+jsonpath = joinpath(datdir, "carbon_sources.json")
 open(jsonpath, "w") do io
     JSON.print(io, carbon_sources, 2)
 end

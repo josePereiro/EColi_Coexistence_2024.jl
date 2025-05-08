@@ -1,23 +1,26 @@
 # MARK: using
 @time begin
-    using EColi_Coexistence_2024
+    using CSV
     using MetX
-    using MetX.MetXNetHub
+    using JSON
+    using Gurobi
+    using Random
+    using MetX.Clp
     using MetX.GLPK
     using MetX.Ipopt
-    using MetX.Clp
-    using Gurobi
-    using CSV
+    using MetX.MetXNetHub
     using DataFrames
-    using JSON
     using CairoMakie
-    using Serialization
     using SparseArrays
-    using Random
+    using Serialization
+    using EColi_Coexistence_2024
 end
 
 # -- .. - .-- .-. . .... -- -- -- .. ...
 include("0.utils.jl")
+
+# -- .. - .-- .-. . .... -- -- -- .. ...
+_parse_ARGS()
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 #=
@@ -30,7 +33,9 @@ DOING
 
 # -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: Prepare opm
-include("1.1.prepare.PamModel-alter.2strains.opm.jl")
+# @cli prepare_opm = "1.1.prepare.PamModel-alter.2strains.opm.jl"
+@cli prepare_opm = "1.3.prepare.iML1515.2strains.opm.jl"
+include(prepare_opm)
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: experimental data
@@ -42,11 +47,17 @@ let
 end
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
+# MARK: ObjFun
+include("3.1.1.select_objfun.jl")
+
+## -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: DFBA
 # dfba
 SOL = Dict{String, Vector{Float64}}()
+
+include("3.1.1.select_objfun.jl")
+
 let
-    cli = _parse_ARGS()
 
     # open medium, the glc will be controlled at each cell
     ub!(opm, "Medium:EX_glc__D_e_b", 1000.0)
@@ -55,33 +66,6 @@ let
     ub!(opm, "ΔIle:EX_ile__L_e_b", 1000.0)
     ub!(opm, "ΔMet:EX_met__L_e_b", 1000.0)
     ub!(opm, "ΔIle:EX_met__L_e_b", 1000.0)
-
-
-    # MARK: ....objective function
-    set_linear_obj!(opm, 
-        [   
-            "ΔMet:BIOMASS_Ec_iML1515_WT_75p37M_f",
-            "ΔIle:BIOMASS_Ec_iML1515_WT_75p37M_f",
-            "Medium:EX_glc__D_e_b", 
-            "ΔMet:EX_glc__D_e_b",  
-            "ΔIle:EX_glc__D_e_b",
-            "ΔMet:EX_ile__L_e_b",
-            "ΔIle:EX_ile__L_e_b",
-            "ΔMet:EX_met__L_e_b",
-            "ΔIle:EX_met__L_e_b",
-        ],
-        [
-              1e4,  # "ΔMet:BIOMASS_Ec_iML1515_WT_75p37M_f" max ~1.0
-              1e2,  # "ΔIle:BIOMASS_Ec_iML1515_WT_75p37M_f"
-              0.0,  # "Medium:EX_glc__D_e_b" 
-            -1e-3,  # "ΔMet:EX_glc__D_e_b" max ~10.0
-            -1e-3,  # "ΔIle:EX_glc__D_e_b"
-            -1e-5,  # "ΔMet:EX_ile__L_e_b"
-            -1e-5,  # "ΔIle:EX_ile__L_e_b"
-            -1e-5,  # "ΔMet:EX_met__L_e_b"
-            -1e-5,  # "ΔIle:EX_met__L_e_b"
-        ]
-    )
     
     # MARK: ....constants
     # from https://doi.org/10.3182/20100707-3-BE-2012.0059
@@ -108,7 +92,7 @@ let
     @cli D_t0 = 0.2                         # [1/h]
     dovPush!(SOL, "D.ts", D_t0)                 # [1/h]
     
-    @cli niters = 400
+    @cli niters = 100
     for it in 1:niters
         # MARK: ....iter initial stuff
         ΔIle_X_t = dovLast(SOL, "ΔIle:X.ts")        # [g/L]
@@ -244,8 +228,10 @@ let
         end
     end
 
-    # Store
-    datdir = string(@__FILE__, "data")
+    # MARK: save
+    datdir = joinpath(@__DIR__, "data",
+        replace(basename(@__FILE__), r".jl$" => "")
+    )
     mkpath(datdir)
     _scope = @scope
     filename = joinpath(datdir, string(hash(_scope), ".jls"))
