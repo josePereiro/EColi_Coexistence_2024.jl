@@ -1,9 +1,8 @@
 @time begin
     using MetX
-    using MetX: MetXNetHub
+    using MetXNetHub
     using GLPK
     using Ipopt
-    using Gurobi
     using CairoMakie
     using SparseArrays
 end
@@ -16,13 +15,13 @@ include("utils.jl")
 ## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
 # ko
 let
-    global net0 = pull_net("iJO1366")
+    net0 = pull_net("iJO1366")
     bounds!(net0, "METabcpp", -1000.0, 1000.0)
     id1 = "Met"
     id2 = "Ile"
     med = "Medium"
 
-    global net1 = double_model(net0, id1, id2; med)
+    net1 = double_model(net0, id1, id2; med)
     ko_id1 = "$id1:HSST"
     ko_id2 = "$id2:THRD_L"
 
@@ -86,12 +85,12 @@ let
     lb!(opm, biom_aux, tot_biom - 1e-3)
     ub!(opm, biom_aux, tot_biom + 1e-3)
 
-    global z1_vec = Float64[]
-    global z2_vec = Float64[]
-    global glc1_vec = Float64[]
-    global glc2_vec = Float64[]
+    z1_vec = Float64[]
+    z2_vec = Float64[]
+    glc1_vec = Float64[]
+    glc2_vec = Float64[]
 
-    global z1_fracv = range(0.0, 1.0; length = 5)
+    z1_fracv = range(0.0, 1.0; length = 5)
     for z1_frac in z1_fracv
         @show z1_frac
         # fix z1 fraction

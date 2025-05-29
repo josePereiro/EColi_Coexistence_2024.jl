@@ -7,24 +7,24 @@ function double_model(net0, strain1, strain2, med = "Medium")
     
     # S, lb, ub, rxns, mets = net0.S, net0.lb, net0.ub, net0.rxns, net0.mets
     # Network original fields
-    global S0 = stoi(net0)
-    global M0, N0 = size(S0)
-    global lb0, ub0 = bounds(net0)
-    global rxns0 = reactions(net0)
-    global mets0 = metabolites(net0)
+    S0 = stoi(net0)
+    M0, N0 = size(S0)
+    lb0, ub0 = bounds(net0)
+    rxns0 = reactions(net0)
+    mets0 = metabolites(net0)
     biom0 = extras(net0, "BIOM")
 
     # exchanges
-    global ex_metis0 = Int[]
-    global nonex_metis0 = Int[]
+    ex_metis0 = Int[]
+    nonex_metis0 = Int[]
     for (meti, met) in enumerate(mets0)
         endswith(met, "_e") ? 
             push!(ex_metis0, meti) : 
             push!(nonex_metis0, meti)
     end
 
-    global ex_rxnis0 = Int[]
-    global nonex_rxnis0 = Int[]
+    ex_rxnis0 = Int[]
+    nonex_rxnis0 = Int[]
     for (rxni, rxn) in enumerate(rxns0)
         startswith(rxn, "EX_") ? 
             push!(ex_rxnis0, rxni) : 
@@ -33,10 +33,10 @@ function double_model(net0, strain1, strain2, med = "Medium")
 
     # mix
     Θ0 = spzeros(M0, N0)
-    global E0 = S0[ex_metis0, ex_rxnis0]
+    E0 = S0[ex_metis0, ex_rxnis0]
     ME0, NE0 = size(E0)
     Θ1 = spzeros(M0, NE0)
-    global E1 = S0[ex_metis0, :] .* -1
+    E1 = S0[ex_metis0, :] .* -1
     E1[:,nonex_rxnis0] .= 0
     S1 = [
         S0 Θ0 Θ1
@@ -103,7 +103,7 @@ function double_model(net0, strain1, strain2, med = "Medium")
     # c2 = [c1; 1]
     c2 = c1
     
-    global net2 = MetNet(;
+    net2 = MetNet(;
         S=Matrix(S2), 
         lb=Vector(lb2), 
         ub=Vector(ub2), 
@@ -127,7 +127,6 @@ function double_model(net0, strain1, strain2, med = "Medium")
 
     return net2
 end
-
 
 
 # MARK: summary
@@ -230,9 +229,8 @@ function _parse_ARGS(args=ARGS)
         length(dig) == 2 || continue
         CLI[dig[1]] = _tryparse(dig[2])
     end
-    return CLI
+    return
 end
-_parse_ARGS()
 
 macro cli(ex::Expr)
     ex.head == Symbol("=") || 
@@ -249,32 +247,54 @@ end
 # This interface determine if an object is lite or not
 # overwrite to change definition
 
-using Dates
+# using Dates
 
-islite(::Any) = false    # fallback
-islite(::Number) = true
-islite(::Symbol) = true
-islite(::DateTime) = true
-islite(::VersionNumber) = true
-islite(::Nothing) = true
-islite(s::AbstractString) = length(s) < 1000
+# islite(::Any) = false    # fallback
+# islite(::Number) = true
+# islite(::Symbol) = true
+# islite(::DateTime) = true
+# islite(::VersionNumber) = true
+# islite(::Nothing) = true
+# islite(s::AbstractString) = length(s) < 1000
 
-macro scope()
-    return quote
-        local _mod = @__MODULE__
-        local _glob = Dict{Symbol, Any}()
-        for f in names(_mod)
-            # @show f
-            # @show isdefined(_mod, f)
-            _glob[f] = isdefined(_mod, f) ? getfield(_mod, f) : :UNDEFINED
-        end
-        local _loc = Base.@locals
-        local _scope = Dict{Symbol, Any}()
-        merge!(_scope, _glob, _loc)
-        for (key, val) in _scope
-            islite(val) && continue
-            _scope[key] = hash(val)
-        end
-        _scope
+# # macro scope()
+# #     return quote
+# #         local _mod = @__MODULE__
+# #         local _glob = Dict{Symbol, Any}()
+# #         for f in names(_mod)
+# #             # @show f
+# #             # @show isdefined(_mod, f)
+# #             _glob[f] = isdefined(_mod, f) ? getfield(_mod, f) : :UNDEFINED
+# #         end
+# #         local _loc = Base.@locals
+# #         local _scope = Dict{Symbol, Any}()
+# #         merge!(_scope, _glob, _loc)
+# #         for (key, val) in _scope
+# #             islite(val) && continue
+# #             _scope[key] = hash(val)
+# #         end
+# #         _scope
+# #     end
+# # end
+
+
+## -- .. - .-- .-. . .... -- -- -- .. ...
+function _indexes(xs, ys;
+        nsamples = 10_000,
+        idx0 = 0.0,
+        idx1 = 1.0,
+    )
+    idxs = intersect(eachindex(xs), eachindex(ys))
+    nidxs = length(idxs)
+    idx_min, idx_max = extrema(idxs)
+    idx0 = clamp(floor(Int, idx0 * nidxs), idx_min, idx_max)
+    idx1 = clamp(ceil(Int, idx1 * nidxs), idx_min, idx_max)
+    idxs = idxs[idx0:idx1]
+    if nsamples > 0
+        return rand(idxs, nsamples)
     end
+    return idxs
 end
+
+## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
+nothing

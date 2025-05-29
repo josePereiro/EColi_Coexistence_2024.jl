@@ -1,22 +1,16 @@
-# MARK: using
 @time begin
     using EColi_Coexistence_2024
     using MetX
-    using MetX.MetXNetHub
-    using MetX.GLPK
-    using MetX.Ipopt
-    using Gurobi
+    using MetXNetHub
+    using GLPK
+    using Ipopt
     using CSV
     using DataFrames
     using JSON
-    using CairoMakie
     using Serialization
     using SparseArrays
     using Random
 end
-
-# -- .. - .-- .-. . .... -- -- -- .. ...
-include("0.utils.jl")
 
 # -- .. - .-- .-. . .... -- -- -- .. ...
 #=
@@ -27,30 +21,48 @@ DOING
 - testing different initial conditions.
 =# 
 
-# -- .. - .-- .-. . .... -- -- -- .. ...
-# MARK: Prepare opm
-include("1.2.prepare.core_ecoli.opm.jl")
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+include("0.0.project.jl")
+include("0.99.utils.jl")
+
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+include("1.0.prepare.lepmodel.jl")
+include("3.0.select.objfun.jl")
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
-let
-    json_file = joinpath(PaperSON_dir(), "raw.json")
-    global rawData = JSON.parsefile(json_file)
-    global fig1Data = rawData["data"]["Fig 1"]
-    nothing
+# MARK: tape hooks
+st_config!(r"co-chemostat-dfba-1strain-ecoli_core",
+    "do.write.batch.at.len" => 300
+)
+
+st_hook!(r"co-chemostat-dfba-1strain-ecoli_core") do scv, sc
+
+    ts_isclass(scv, :unknown) || return :pass
+
+    # isa(scv.val, AbstractArray) && return :blob
+    startswith(scv.key, "net") && return :blob
+    startswith(scv.key, "opm") && return :blob
+
+    scv.key == "args" && return :blob
+
+    return :ignored
 end
-
-
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: DFBA
 # dfba
 SOL = Dict{String, Vector{Float64}}()
 let
+    @st_flush! "co-chemostat-dfba-1strain-ecoli_core"
+
+    lepmodel_id = "core_ecoli"
+    net0, opm = prepare_lepmodel(lepmodel_id)
+
+
     # objective function
-    set_linear_obj!(opm, 
-        ["BIOMASS_Ecoli_core_w_GAM", "EX_glc__D_e", "EX_nh4_e", "EX_o2_e", "EX_co2_e"], 
-        [1e5, -1e-2, -1e-2, -1e-2, -1e-2]
-    )
+    objfun_id = "max.biomass.max.yield"
+    objiders, objcoes = select_objfun(lepmodel_id, objfun_id)
+    set_linear_obj!(opm, objiders, objcoes)
     
     # constants
     # from https://doi.org/10.3182/20100707-3-BE-2012.0059
@@ -126,62 +138,3 @@ let
     end
 end
 
-## -- .. - .-- .-. . .... -- -- -- .. ...
-function _indexes(xs, ys;
-        nsamples = 10_000,
-        idx0 = 0.0,
-        idx1 = 1.0,
-    )
-    idxs = intersect(eachindex(xs), eachindex(ys))
-    nidxs = length(idxs)
-    idx_min, idx_max = extrema(idxs)
-    idx0 = clamp(floor(Int, idx0 * nidxs), idx_min, idx_max)
-    idx1 = clamp(ceil(Int, idx1 * nidxs), idx_min, idx_max)
-    idxs = idxs[idx0:idx1]
-    if nsamples > 0
-        return rand(idxs, nsamples)
-    end
-    return idxs
-end
-
-
-## -- .. - .-- .-. . .... -- -- -- .. ...
-# MARK: time plot
-let
-    f = Figure()
-    ax = Axis(f[3:5, 1:3];
-        xlabel = "time [h]"
-    )
-
-    # y_ts_id0 = "X.ts"
-    # y_ts_id0 = "max_u.EX_glc__D_e.ts"
-    # y_ts_id0 = "dt.ts"
-    # y_ts_id0 = "s.EX_glc__D_e.ts"
-    y_ts_id0 = "v.BIOMASS_Ecoli_core_w_GAM.ts"
-    # y_ts_id0 = "D.ts"
-
-    nsamples = 10_000
-    idx0 = 0.004
-    idx1 = 0.9
-
-    xs = cumsum(SOL["dt.ts"])
-    ys = SOL[y_ts_id0]
-    idxs = _indexes(xs, ys; nsamples, idx0, idx1)
-    scatter!(ax, 
-        xs[idxs], ys[idxs];
-        label = y_ts_id0, 
-    )
-    # ax.limits = (nothing, nothing, 0.0, 0.25)
-
-    ts_id1 = "D.ts"
-    xs = cumsum(SOL["dt.ts"])
-    ys = SOL[ts_id1]
-    idxs = _indexes(xs, ys; nsamples, idx0, idx1)
-    scatter!(ax, 
-        xs[idxs], ys[idxs];
-        label = ts_id1
-    )
-
-    Legend(f[1:2,1:3], ax)
-    f
-end

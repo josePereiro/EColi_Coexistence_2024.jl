@@ -12,23 +12,23 @@ function double_model(net0, id1, id2)
     
     # S, lb, ub, rxns, mets = net0.S, net0.lb, net0.ub, net0.rxns, net0.mets
     # Network original fields
-    global S0 = stoi(net0)
-    global M0, N0 = size(S0)
-    global lb0, ub0 = bounds(net0)
-    global rxns0 = reactions(net0)
-    global mets0 = metabolites(net0)
+    S0 = stoi(net0)
+    M0, N0 = size(S0)
+    lb0, ub0 = bounds(net0)
+    rxns0 = reactions(net0)
+    mets0 = metabolites(net0)
 
     # exchanges
-    global ex_metis0 = Int[]
-    global nonex_metis0 = Int[]
+    ex_metis0 = Int[]
+    nonex_metis0 = Int[]
     for (meti, met) in enumerate(mets0)
         endswith(met, "_e") ? 
             push!(ex_metis0, meti) : 
             push!(nonex_metis0, meti)
     end
 
-    global ex_rxnis0 = Int[]
-    global nonex_rxnis0 = Int[]
+    ex_rxnis0 = Int[]
+    nonex_rxnis0 = Int[]
     for (rxni, rxn) in enumerate(rxns0)
         startswith(rxn, "EX_") ? 
             push!(ex_rxnis0, rxni) : 
@@ -36,11 +36,11 @@ function double_model(net0, id1, id2)
     end
 
     # exchangeless network
-    global S1 = S0[nonex_metis0, nonex_rxnis0]
-    global N1, M1 = size(S1)
-    global lb1, ub1 = lb0[nonex_rxnis0], ub0[nonex_rxnis0]
-    global rxns1 = rxns0[nonex_rxnis0]
-    global mets1 = mets0[nonex_metis0]
+    S1 = S0[nonex_metis0, nonex_rxnis0]
+    N1, M1 = size(S1)
+    lb1, ub1 = lb0[nonex_rxnis0], ub0[nonex_rxnis0]
+    rxns1 = rxns0[nonex_rxnis0]
+    mets1 = mets0[nonex_metis0]
 
     # mix
     Θ1 = spzeros(N1, M1)
@@ -80,7 +80,7 @@ function double_model(net0, id1, id2)
     @assert length(mets2) == M2
     
     # TODO: Brito: Como crear una red en COBREXA a partir de:
-    global net2 = MetNet(;
+    net2 = MetNet(;
         S=Matrix(S2), 
         lb=Vector(lb2), 
         ub=Vector(ub2), 
@@ -105,10 +105,10 @@ end
 ## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
 # ko
 let
-    global net0 = pull_net("iJO1366")
+    net0 = pull_net("iJO1366")
     id1 = "Met"
     id2 = "Ile"
-    global net2 = double_model(net0, id1, id2)
+    net2 = double_model(net0, id1, id2)
     ko_id1 = "$id1:HSST"
     ko_id2 = "$id2:THRD_L"
 

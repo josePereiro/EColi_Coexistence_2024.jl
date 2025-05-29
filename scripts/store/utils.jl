@@ -5,24 +5,24 @@ function double_model(net0, id1, id2; med = "Medium")
     
     # S, lb, ub, rxns, mets = net0.S, net0.lb, net0.ub, net0.rxns, net0.mets
     # Network original fields
-    global S0 = stoi(net0)
-    global M0, N0 = size(S0)
-    global lb0, ub0 = bounds(net0)
-    global rxns0 = reactions(net0)
-    global mets0 = metabolites(net0)
+    S0 = stoi(net0)
+    M0, N0 = size(S0)
+    lb0, ub0 = bounds(net0)
+    rxns0 = reactions(net0)
+    mets0 = metabolites(net0)
     biom0 = extras(net0, "BIOM")
 
     # exchanges
-    global ex_metis0 = Int[]
-    global nonex_metis0 = Int[]
+    ex_metis0 = Int[]
+    nonex_metis0 = Int[]
     for (meti, met) in enumerate(mets0)
         endswith(met, "_e") ? 
             push!(ex_metis0, meti) : 
             push!(nonex_metis0, meti)
     end
 
-    global ex_rxnis0 = Int[]
-    global nonex_rxnis0 = Int[]
+    ex_rxnis0 = Int[]
+    nonex_rxnis0 = Int[]
     for (rxni, rxn) in enumerate(rxns0)
         startswith(rxn, "EX_") ? 
             push!(ex_rxnis0, rxni) : 
@@ -31,10 +31,10 @@ function double_model(net0, id1, id2; med = "Medium")
 
     # mix
     Θ0 = spzeros(M0, N0)
-    global E0 = S0[ex_metis0, ex_rxnis0]
+    E0 = S0[ex_metis0, ex_rxnis0]
     ME0, NE0 = size(E0)
     Θ1 = spzeros(M0, NE0)
-    global E1 = S0[ex_metis0, :] .* -1
+    E1 = S0[ex_metis0, :] .* -1
     E1[:,nonex_rxnis0] .= 0
     S1 = [
         S0 Θ0 Θ1
@@ -90,7 +90,7 @@ function double_model(net0, id1, id2; med = "Medium")
     b2 = [b1; 0]
     c2 = [c1; 1]
     
-    global net2 = MetNet(;
+    net2 = MetNet(;
         S=Matrix(S2), 
         lb=Vector(lb2), 
         ub=Vector(ub2), 

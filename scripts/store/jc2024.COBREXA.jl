@@ -12,29 +12,29 @@ end
 # Load model
 let
     fn = joinpath(@__DIR__, "iJO1366.json")
-    global model = load_model(fn)
+    model = load_model(fn)
 end
 
 ## .- .-. - -.-- - - -. .. -.- .-.- .-. - --- - .- -.- - 
 let
     # Network original fields
-    global S0 = A.stoichiometry(model)
-    global N0, M0 = size(S0)
-    global lb0, ub0 = A.bounds(model)
-    global rxns0 = A.reactions(model)
-    global mets0 = A.metabolites(model)
+    S0 = A.stoichiometry(model)
+    N0, M0 = size(S0)
+    lb0, ub0 = A.bounds(model)
+    rxns0 = A.reactions(model)
+    mets0 = A.metabolites(model)
 
     # exchanges
-    global ex_metis0 = Int[]
-    global nonex_metis0 = Int[]
+    ex_metis0 = Int[]
+    nonex_metis0 = Int[]
     for (meti, met) in enumerate(mets0)
         endswith(met, "_e") ? 
             push!(ex_metis0, meti) : 
             push!(nonex_metis0, meti)
     end
 
-    global ex_rxnis0 = Int[]
-    global nonex_rxnis0 = Int[]
+    ex_rxnis0 = Int[]
+    nonex_rxnis0 = Int[]
     for (rxni, rxn) in enumerate(rxns0)
         startswith(rxn, "EX_") ? 
             push!(ex_rxnis0, rxni) : 
@@ -42,11 +42,11 @@ let
     end
 
     # exchangeless network
-    global S1 = S0[nonex_metis0, nonex_rxnis0]
-    global N1, M1 = size(S1)
-    global lb1, ub1 = lb0[nonex_rxnis0], ub0[nonex_rxnis0]
-    global rxns1 = rxns0[nonex_rxnis0]
-    global mets1 = mets0[nonex_metis0]
+    S1 = S0[nonex_metis0, nonex_rxnis0]
+    N1, M1 = size(S1)
+    lb1, ub1 = lb0[nonex_rxnis0], ub0[nonex_rxnis0]
+    rxns1 = rxns0[nonex_rxnis0]
+    mets1 = mets0[nonex_metis0]
 
     # mix
     Θ1 = zeros(N1, M1)

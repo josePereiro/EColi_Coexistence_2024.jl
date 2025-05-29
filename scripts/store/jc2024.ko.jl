@@ -8,7 +8,7 @@ end
 ## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
 # ko
 let
-    global net0 = pull_net("iJO1366")
+    net0 = pull_net("iJO1366")
     
     met_ex0 = "EX_met__L_e"
     ile_ex0 = "EX_ile__L_e"

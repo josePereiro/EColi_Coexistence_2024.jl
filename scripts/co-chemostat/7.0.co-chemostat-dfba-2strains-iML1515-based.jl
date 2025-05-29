@@ -1,26 +1,16 @@
-# MARK: using
 @time begin
     using CSV
     using MetX
+    using MetX: Clp, GLPK, Ipopt
     using JSON
-    using Gurobi
     using Random
-    using MetX.Clp
-    using MetX.GLPK
-    using MetX.Ipopt
-    using MetX.MetXNetHub
+    using MetXNetHub
     using DataFrames
     using CairoMakie
     using SparseArrays
     using Serialization
     using EColi_Coexistence_2024
 end
-
-# -- .. - .-- .-. . .... -- -- -- .. ...
-include("0.utils.jl")
-
-# -- .. - .-- .-. . .... -- -- -- .. ...
-_parse_ARGS()
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 #=
@@ -31,34 +21,146 @@ DOING
 - testing different initial conditions.
 =# 
 
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# MARK: include
+include("0.0.project.jl")
+include("0.88.scoperias.utils.jl")
+include("0.99.utils.jl")
+
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+include("1.0.prepare.lepmodel.jl")
+include("3.0.select.objfun.jl")
+
 # -- .. - .-- .-. . .... -- -- -- .. ...
-# MARK: Prepare opm
-# @cli prepare_opm = "1.1.prepare.PamModel-alter.2strains.opm.jl"
-@cli prepare_opm = "1.3.prepare.iML1515.2strains.opm.jl"
-include(prepare_opm)
+_parse_ARGS()
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
-# MARK: experimental data
-let
-    # json_file = joinpath(PaperSON_dir(), "raw.json")
-    # global rawData = JSON.parsefile(json_file)
-    # global fig1Data = rawData["data"]["Fig 1"]
-    # nothing
+# MARK: sc_sel_hook!
+sc_reset_sel_hooks!()
+sc_sel_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+], 1) do scv::ScopeVariable
+
+    startswith(scv.key, "_") && return :ignore
+    return :include
 end
 
-## -- .. - .-- .-. . .... -- -- -- .. ...
-# MARK: ObjFun
-include("3.1.1.select_objfun.jl")
+sc_sel_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+    ["store.D"]
+], 1) do scv::ScopeVariable
+    startswith(scv.key, "_") && return :ignore
+    return :include
+end
+
+
+# MARK: sc_call_hook!
+_C = Dict{String, Any}() # RAM CACHE
+
+sc_reset_call_hooks!()
+
+
+# MARK: ..init_block
+sc_call_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+    ["init_block"]
+]) do sc::Scope
+
+    empty!(_C)
+    
+    bb = sc["bb"][]
+    rm(bb)
+
+end
+
+# MARK: ..prepare_lepmodel
+sc_call_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+    "prepare_lepmodel"
+]) do sc::Scope
+
+    sc1 = filter(sc) do scv
+        scv.key in [
+            "blockver", "lepmodel_id", "lepmodel_args"
+        ] && return true
+        return false
+    end
+    
+    # TODO/ make orderless hash function for scopes
+    frame = repr(hash(sc1))
+    @time _ref = blobio!(C, frame, "val", :getser!) do
+        _net0, _lep0 = prepare_lepmodel(
+            sc1["lepmodel_id"][], 
+            sc1["lepmodel_args"][]
+        )
+        return (_net0, _lep0)
+    end
+    net0, lep0 = C[_ref]
+
+    opm = get!(_C, frame) do
+        FBAOpModel(lep0, Clp.Optimizer)
+    end
+    return (_ref, opm)
+end
+
+# MARK: ..store.D
+sc_call_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+    ["store.D"]
+]) do sc::Scope
+
+    bb = sc["bb"][]
+    b = blob!(bb, rbid())
+    # TODO/ create an interface for labeling each variable to a destination
+    # - similar to ScopeTape
+    # - maybe reimplement ScopeTape but using Bloberias and Scoperias as deps
+
+    merge!(b, "context", litecontext(sc))
+    b["params", "lepmodel_args"] = sc["lepmodel_args"][]
+
+    net0 = sc["net0"][]
+    opm = sc["opm"][]
+
+    sol = Dict{String, Float64}(
+        rnx => solution(opm, rnx) 
+        for rnx in reactions(net0)
+    )
+    b["sol", "."] = sol
+
+end
+
+# MARK: ..end
+sc_call_hook!([
+    "co-chemostat-dfba-2strains-iML1515-based", 
+    ["end"]
+]) do sc::Scope
+
+    bb = sc["bb"][]
+    serialize!(bb)
+
+    # finalizer
+    empty!(bb)
+    empty!(_C)
+end
+
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: DFBA
 # dfba
 SOL = Dict{String, Vector{Float64}}()
 
-include("3.1.1.select_objfun.jl")
-
 let
+    # setup block
+    @init_block "co-chemostat-dfba-2strains-iML1515-based" "1"
 
+    lepmodel_id = "iML1515.2strains"
+    lepmodel_args = Dict()
+    objfun_id = "non-competitive.max.yield"
+
+    prepare_lepmodel_ref, opm = @sc_call("prepare_lepmodel")
+    net0, lep0 = C[prepare_lepmodel_ref]
+
+    
     # open medium, the glc will be controlled at each cell
     ub!(opm, "Medium:EX_glc__D_e_b", 1000.0)
     # open essential intake
@@ -67,14 +169,18 @@ let
     ub!(opm, "ΔMet:EX_met__L_e_b", 1000.0)
     ub!(opm, "ΔIle:EX_met__L_e_b", 1000.0)
     
+    
     # MARK: ....constants
     # from https://doi.org/10.3182/20100707-3-BE-2012.0059
+    @cli u_max = 8.9                # [mmol/g/h] Match PAM u_max
     @cli glc_Km = 1.5               # [mM] 
     @cli glc_Vmax = abs(u_max)      # [mmol/g/h] Match PAM u_max
     @cli dt_min = 5e-3              # [h]
     @cli dt_max = 5e-2              # [h]
     @cli X_max = 10.0               # [g/L]
     @cli X_min = 1e-3               # [g/L]
+
+    return
 
     # MARK: ....initial cond
     @cli c_glc__D_e_t0 = 10.0
@@ -87,7 +193,7 @@ let
     @cli ΔMet_X_t0 = 0.3
     dovPush!(SOL, "ΔMet:X.ts", ΔMet_X_t0)           # [g/L] 
     # TODO: make dt proportional to z
-    @cli dt_t0 = 1e-1 # [h]
+    @cli dt_t0 = (X_max + X_min) * 0.5 # [h]
     dovPush!(SOL, "dt.ts", dt_t0)              # [h]
     @cli D_t0 = 0.2                         # [1/h]
     dovPush!(SOL, "D.ts", D_t0)                 # [1/h]
