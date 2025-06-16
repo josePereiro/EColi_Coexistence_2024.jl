@@ -1,3 +1,13 @@
+using UUIDs
+
+# TODO/ move out to 
+# - Utilerias (?)
+# - Simulerias
+# - ScopeTape
+# - 
+
+
+## -- .. - .-- .-. . .... -- -- -- .. ...
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
 # MARK: init_block
@@ -9,7 +19,8 @@ macro init_block(lb, ver)
         Scoperias.@sc_label $(lb)
         blockver = $(ver)
         blockttag = Dates.format(now(), "yyyymmdd-HHMMSSS")
-        blockuuid =  uuid4()
+        blockuuid = uuid4()
+        blocklabel = $(lb)
         bb = blobbatch!(B, $(lb))
 
         @sc_call "init_block"
@@ -41,6 +52,8 @@ macro blockbatch!()
 end
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# TODO/ move out to Utilerias (?)
+
 ascontext(v::Number) = v
 ascontext(v::Bool) = v
 ascontext(v::AbstractString) = v
@@ -58,6 +71,15 @@ function litecontext(sc::Scope)
     return new_sc
 end
 
+
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# TODO/ move out to Utilerias (?)
+
+function ttag_rname(args::String...)
+    ttag = Dates.format(now(), "yyyymmdd-HHMMSSS")
+    rtag = repr(rand(UInt32))
+    return join([args..., ttag, rtag], "-")
+end
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
 nothing

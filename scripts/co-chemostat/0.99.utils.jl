@@ -178,6 +178,10 @@ function _opm_summary_ecoli_core(opm)
 end
 
 # MARK: dict of vec (dov)
+function dovGet(dict::Dict, id::String, dflt = nothing)
+    return get(dict, id, dflt)
+end
+
 function dovPush!(dict::Dict, id::String, val) 
     vec = get!(dict, id, [])
     push!(vec, val)
@@ -295,6 +299,39 @@ function _indexes(xs, ys;
     end
     return idxs
 end
+
+## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
+
+# TODO/ Move to Bloberias
+
+import Base.rand
+function Base.rand(rng::AbstractRNG, bb::BlobBatch)
+    _uuids = getbuuids!(bb)
+    _rid = rand(rng, _uuids)
+    return blob(bb, _rid)
+end
+
+function Base.rand(bb::BlobBatch)
+    rng = Random.default_rng()
+    return rand(rng, bb)
+end
+
+function Base.rand(rng::AbstractRNG, B::Bloberia, bbid_prefix = nothing; )
+    # eachbatch sort using all files from readdir
+    bbs = eachbatch(B, bbid_prefix;
+        sortfun = fns -> shuffle!(rng, fns),
+        ch_size = 1,
+        n_tasks = 1
+    )
+    return first(bbs)
+end
+
+function Base.rand(B::Bloberia, bbid_prefix = nothing)
+    rng = Random.default_rng()
+    return rand(rng, B, bbid_prefix)
+end
+
+
 
 ## -- .- .- .-.-.- .-. - -.-. ..- .- -. -.. . 
 nothing

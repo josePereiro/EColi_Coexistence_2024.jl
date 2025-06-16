@@ -18,18 +18,6 @@ include("0.0.project.jl")
 include("0.99.utils.jl")
 
 ## -- .. - .-- .-. . .... -- -- -- .. ...
-__match(reg::Regex, val::AbstractString) = occursin(reg, val)
-__match(reg::AbstractString, val::AbstractString) = isequal(reg, val)
-__match(reg, val) = false
-
-function hasval(dict, reg)
-    for val in values(dict)
-        __match(reg, val) && return true
-    end
-    return false
-end
-
-## -- .. - .-- .-. . .... -- -- -- .. ...
 let
     bb = blobbatch(B, "co-chemostat-fba-2strains-iML1515-based")
 
