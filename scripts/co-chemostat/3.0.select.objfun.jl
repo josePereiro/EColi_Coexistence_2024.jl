@@ -43,6 +43,7 @@ function select_objfun(lepmodel_id, objfun_id)
             "iML1515.2strains"
         ] &&
         objfun_id in [
+            # TODO: rename 
             "ΔIle.egoist.max.yield"
         ]
         objiders = [   

@@ -219,8 +219,8 @@ let
         glc_Km = [1.5] |> rand               # [mM] 
         glc_Vmax = [abs(u_max)] |> rand      # [mmol/g/h] Match PAM u_max
         dt_min, dt_max = [
-            # (1e-4, 1e-2),
-            (1e-2, 5e-2),
+            (1e-4, 1e-2),
+            # (1e-2, 5e-2),
             # (5e-3, 5e-2),
         ] |> rand                            # [h]
         X_max = [10.0] |> rand               # [g/L]
@@ -232,7 +232,7 @@ let
         s_glc__D_e_t0 = c_glc__D_e_t0
         dovPush!(SOL, "s.glc__D_e.ts", s_glc__D_e_t0)       # [mM]
         # from https://doi.org/10.3182/20100707-3-BE-2012.0059 
-        X_t0_pool = Float64[ 0.3, 0.5, 0.8, 1.0 ]
+        X_t0_pool = Float64[0.5]
         ΔIle_X_t0 = X_t0_pool |> rand
         dovPush!(SOL, "ΔIle:X.ts", ΔIle_X_t0)           # [g/L] 
         ΔMet_X_t0 = X_t0_pool |> rand
@@ -240,8 +240,8 @@ let
         # TODO: make dt proportional to z
         dt_t0 = (dt_max + dt_min) * 0.5 # [h]
         dovPush!(SOL, "dt.ts", dt_t0)                   # [h]
-        D_min = 0.1
-        D_max = 0.6
+        D_min = 0.35
+        D_max = 0.55
         D_t0 = (D_max - D_min) * rand() + D_min         # [1/h]
         dovPush!(SOL, "D.ts", D_t0)                     # [1/h]
         abs_max_uglc_ref = nothing

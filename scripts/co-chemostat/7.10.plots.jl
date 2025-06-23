@@ -15,23 +15,6 @@ include("0.0.project.jl")
 include("0.99.utils.jl")
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
-# DOING detect stst
-let
-    # Random.seed!(123)
-    global _b = rand(rand(B, r"co-"));
-    _v = _b["dyn.sol", "."]["ΔIle:X.ts"];
-    w = 0.1
-    i0, i1 = firstindex(_v), lastindex(_v)
-    l = length(_v)
-    i = ceil(Int, l * (1 - w))
-    i = clamp(i, i0, i1)
-    m, s = mean(_v[i:i1]), std(_v[i:i1])
-    @show m, s
-    s / abs(m) < 0.1
-end
-
-
-## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
 # TODO/ Move to Bloberias
 
 function stateful_blobs(B::Bloberia, bbid_prefix = nothing)

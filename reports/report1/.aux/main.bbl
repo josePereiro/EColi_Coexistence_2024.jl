@@ -1,0 +1,34 @@
+\begin{thebibliography}{1}
+
+\bibitem{alterProteomeRegulationPatterns2021}
+Tobias~B. Alter, Lars~M. Blank, and Birgitta~E. Ebert.
+\newblock Proteome {{Regulation Patterns Determine Escherichia}} coli
+  {{Wild-Type}} and {{Mutant Phenotypes}}.
+\newblock 6(2):10.1128/msystems.00625--20.
+
+\bibitem{grilli2025notes}
+Jacopo Grilli.
+\newblock Notes for sc2025.
+\newblock \url{https://jacopogrilli.github.io/websitenotes/sc2025/}, 2025.
+\newblock Accessed: 2025-06-18.
+
+\bibitem{moriConstrainedAllocationFlux2016}
+Matteo Mori, Terence Hwa, Olivier~C. Martin, Andrea De~Martino, and Enzo
+  Marinari.
+\newblock Constrained {{Allocation Flux Balance Analysis}}.
+\newblock 12(6):e1004913.
+
+\bibitem{schmidtQuantitativeConditiondependentEscherichia2016}
+Alexander Schmidt, Karl Kochanowski, Silke Vedelaar, Erik Ahrn\'e, Benjamin
+  Volkmer, Luciano Callipo, K\`evin Knoops, Manuel Bauer, Ruedi Aebersold, and
+  Matthias Heinemann.
+\newblock The quantitative and condition-dependent {{Escherichia}} coli
+  proteome.
+\newblock 34(1):104--110.
+
+\bibitem{scottBacterialGrowthLaws2011}
+Matthew Scott and Terence Hwa.
+\newblock Bacterial growth laws and their applications.
+\newblock 22(4):559--565.
+
+\end{thebibliography}
