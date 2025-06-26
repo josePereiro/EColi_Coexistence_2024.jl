@@ -34,11 +34,49 @@ end
 
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# MARK: CONTEXT FILTER
+function foreach_blob(f::Function;
+        bbid_prefix = r"",
+    )
+    bbs = eachbatch(B, 
+        bbid_prefix;
+        sortfun = sort!,
+        ch_size = 1,
+        n_tasks = 1
+    )
+    for bb in bbs
+        for b in bb
+            flag = f(b)
+            flag === :break && return nothing
+        end
+    end
+    return nothing
+end
+
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+let
+    bbid_prefix = r"co-chemostat-dfba-2strains-iML1515-based"
+    t1s = Float64[]
+    foreach_blob(; bbid_prefix) do b
+        dyn_sol = b["dyn.sol", "."]["dt.ts"]
+        push!(t1s, sum(dyn_sol))
+    end
+    nothing
+
+    f = Figure()
+    sx = Axis(f[1,1])
+    hist!(t1s; bins = 50)
+    f
+end
+
+
+## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
 _blob_CH = stateful_blobs(B,
     r"co-chemostat-dfba-2strains-iML1515-based"
 )
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# MARK: time serie
 let
     # dyn.sol
     #  "ΔIle:X.ts"
@@ -110,30 +148,13 @@ let
     
 end
 
+
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
+# MARK: DEV
 let
     global bb = blobbatch(B, "co-chemostat-dfba-2strains-iML1515-based")
     nbs = length(bb)
 
-    # dyn.sol
-    #  "ΔIle:X.ts"
-    #   "dt.ts"
-    #   "ΔMet:BIOMASS_Ec_iML1515_WT_75p37M_f"
-    #   "ΔMet:U:EX_glc__D_e_b.ts"
-    #   "c.glc__D_e.ts"
-    #   "ΔIle:v:EX_glc__D_e_b.ts"
-    #   "ΔIle:U:EX_glc__D_e_b.ts"
-    #   "ΔMet:X.ts"
-    #   "ΔMet:v:EX_glc__D_e_b.ts"
-    #   "s.glc__D_e.ts"
-    #   "ΔIle:BIOMASS_Ec_iML1515_WT_75p37M_f"
-    #   "D.ts"
-
-
-    # context
-    # ["st_label_0x94cca352d2e8e22d", "C", "blockuuid", "c_glc__D_e_t0", "litecontext", "lepmodel_id", "Main", "prepare_iML1515_2strains_opm", "D_t0", "prepare_PamModel_alter_2strains_opm", "B", "blockbatch!", "prepare_lepmodel_ref", "select_objfun", "SOL", "dovLast", "CLI", "double_model", "locate", "net0", "glc_Km", "glc_Vmax", "PROJ", "@cli", "Base", "prepare_lepmodel", "X_min", "niters", "lep0", "@init_block", "blockttag", "@blockbatch!", "ascontext", "Core", "dovLast!", "dt_t0", "bb", "lepmodel_args", "s_glc__D_e_t0", "objfun_id", "dt_min", "objiders", "PROJVER", "dovPush!", "ΔMet_X_t0", "u_max", "G", "opm", "ΔIle_X_t0", "X_max", "dt_max", "st_label_0x914465398f82596b", "blockver", "prepare_ecoli_core_opm", "objcoes"]
-
-    
     # b = bb[rand(1:nbs)]
     b = bb[48]
 

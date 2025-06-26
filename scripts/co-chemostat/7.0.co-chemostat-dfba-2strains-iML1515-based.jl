@@ -240,8 +240,8 @@ let
         # TODO: make dt proportional to z
         dt_t0 = (dt_max + dt_min) * 0.5 # [h]
         dovPush!(SOL, "dt.ts", dt_t0)                   # [h]
-        D_min = 0.35
-        D_max = 0.55
+        D_min = 0.3
+        D_max = 0.35
         D_t0 = (D_max - D_min) * rand() + D_min         # [1/h]
         dovPush!(SOL, "D.ts", D_t0)                     # [1/h]
         abs_max_uglc_ref = nothing

@@ -37,7 +37,7 @@ let
     ) do dyn_bb
         hasframe(dyn_bb, "dyn.sol") || return
         niters = dyn_bb[1]["context", "niters"]
-        niters == 15000 || return
+        niters >= 15000 || return
 
         for dyn_b in dyn_bb
             
@@ -53,8 +53,9 @@ let
                 stst_key = replace(dyn_key, ".ts" => ".stst")
                 
                 ststsol[stst_key] = Dict(
-                    "mean" => mean(last(sol, 500)),
-                    "std" => std(last(sol, 500)),
+                    "mean.last" => mean(last(sol, 500)),
+                    "std.last" => std(last(sol, 500)),
+                    "sum.tot" => sum(sol),
                 )
             end
         end
