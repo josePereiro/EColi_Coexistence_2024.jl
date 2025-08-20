@@ -327,7 +327,7 @@ let
                 @show ΔMet_U_ex_glc_t
                 @show dt_t
                 println("-"^30)
-                _opm_summary_PamModel_alter(opm)
+                _opm_summary_PamModel_alter_2strains(opm)
             else
                 @show it
                 @show abs_max_uglc

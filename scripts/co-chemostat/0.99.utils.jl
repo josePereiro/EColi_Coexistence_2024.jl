@@ -130,7 +130,26 @@ end
 
 
 # MARK: summary
-function _opm_summary_PamModel_alter(opm) 
+function _opm_summary_PamModel_alter_single_aux(opm) 
+    # biom
+    @show solution(opm, "BIOMASS_Ec_iML1515_WT_75p37M_f")
+    @show solution(opm, "BIOMASS_Ec_iML1515_WT_75p37M_b")
+    # glc
+    println("-"^30)
+    @show solution(opm, "EX_glc__D_e_f")
+    @show solution(opm, "EX_glc__D_e_b")
+    # met
+    println("-"^30)
+    @show solution(opm, "EX_met__L_e_f")
+    @show solution(opm, "EX_met__L_e_b")
+    # ile
+    println("-"^30)
+    @show solution(opm, "EX_ile__L_e_f")
+    @show solution(opm, "EX_ile__L_e_b")
+
+end
+
+function _opm_summary_PamModel_alter_2strains(opm) 
     # biom
     @show solution(opm, "ΔMet:BIOMASS_Ec_iML1515_WT_75p37M_f")
     @show solution(opm, "ΔMet:BIOMASS_Ec_iML1515_WT_75p37M_b")

@@ -206,7 +206,7 @@ let
         @show lepmodel_id
         @show objective_value(opm)
         
-        _opm_summary_PamModel_alter(opm)
+        _opm_summary_PamModel_alter_2strains(opm)
 
         println("-"^30)
         @show D / solution(opm, "ΔMet:EX_glc__D_e_b") 

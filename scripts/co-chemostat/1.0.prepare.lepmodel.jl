@@ -2,6 +2,7 @@
 include("1.1.prepare.PamModel-alter.2strains.opm.jl")
 include("1.2.prepare.core_ecoli.opm.jl")
 include("1.3.prepare.iML1515.2strains.opm.jl")
+include("1.4.prepare.PamModel.aux.jl")
 
 ## --- .- -.. -- .-. . . .-- - -. . . .- .- .-.- .. .
 function prepare_lepmodel(lepmodel_id::String, args::Dict = Dict())
@@ -11,6 +12,8 @@ function prepare_lepmodel(lepmodel_id::String, args::Dict = Dict())
         prepare_ecoli_core_opm(args)
     elseif lepmodel_id == "iML1515.2strains"
         prepare_iML1515_2strains_opm(args)
+    elseif lepmodel_id == "PamModel-alter.simple.aux"
+        prepare_PamModel_alter_single_aux_opm(args)
     else
         error("Unknown lepmodel_id, $(lepmodel_id)")
     end

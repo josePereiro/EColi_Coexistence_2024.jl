@@ -155,7 +155,7 @@ function prepare_iML1515_2strains_opm(args::Dict)
         @time optimize!(opm)
 
         println("-"^30)
-        _opm_summary_PamModel_alter(opm)
+        _opm_summary_PamModel_alter_2strains(opm)
     end
 
     return (net1, lep0)
